@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Football Simulator</title>
+
+<style>
+
+/* ---------------- BASIC PAGE STYLE ---------------- */
+
+body{
+margin:0;
+background:#1b1b1b;
+font-family:Arial;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+/* ---------------- GAME PANEL ---------------- */
+
+.game{
+
+background:#111;
+
+padding:25px;
+
+border-radius:14px;
+
+width:950px;
+
+box-shadow:0 0 40px rgba(0,0,0,0.7);
+
+}
+
+/* ---------------- TITLE ---------------- */
+
+h1{
+
+text-align:center;
+
+margin-bottom:15px;
+
+}
+
+/* ---------------- MODE BUTTONS ---------------- */
+
+.modePanel{
+
+text-align:center;
+
+margin-bottom:15px;
+
+}
+
+.modeBtn{
+
+padding:10px 18px;
+
+margin:6px;
+
+border:none;
+
+border-radius:7px;
+
+background:#2979ff;
+
+color:white;
+
+cursor:pointer;
+
+font-size:15px;
+
+}
+
+.modeBtn:hover{
+
+background:#5393ff;
+
+}
+
+/* ---------------- TEAM AREA ---------------- */
+
+.teamArea{
+
+display:flex;
+
+justify-content:space-around;
+
+margin-top:10px;
+
+}
+
+/* ---------------- TEAM BOX ---------------- */
+
+.teamBox{
+
+background:#1d1d1d;
+
+padding:20px;
+
+border-radius:10px;
+
+width:260px;
+
+text-align:center;
+
+}
+
+/* ---------------- TEAM LOGO ---------------- */
+
+.teamBox img{
+
+width:95px;
+
+height:95px;
+
+object-fit:contain;
+
+}
+
+/* ---------------- RATING ---------------- */
+
+.rating{
+
+font-size:14px;
+
+color:#ccc;
+
+margin-top:6px;
+
+}
+
+/* ---------------- SELECT ---------------- */
+
+select{
+
+margin-top:10px;
+
+padding:8px;
+
+border:none;
+
+border-radius:6px;
+
+width:200px;
+
+}
+
+/* ---------------- START BUTTON ---------------- */
+
+.startBtn{
+
+margin:18px auto;
+
+display:block;
+
+padding:12px 26px;
+
+background:#00c853;
+
+border:none;
+
+border-radius:8px;
+
+cursor:pointer;
+
+font-size:17px;
+
+}
+
+.startBtn:hover{
+
+background:#00e676;
+
+}
+
+/* ---------------- SCORE ---------------- */
+
+.score{
+
+text-align:center;
+
+font-size:44px;
+
+margin:10px;
+
+}
+
+/* ---------------- ACTION LOG ---------------- */
+
+#log{
+
+background:black;
+
+height:230px;
+
+overflow-y:auto;
+
+border-radius:8px;
+
+padding:10px;
+
+font-size:14px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="game">
+
+<h1>⚽ Football Match Simulator</h1>
+
+<div class="modePanel">
+
+<button class="modeBtn" onclick="setMode('CLUBS')">Clubs</button>
+
+<button class="modeBtn" onclick="setMode('NATIONS')">Nations</button>
+
+<button class="modeBtn" onclick="setMode('CL')">Champions League</button>
+
+</div>
+
+<div class="teamArea">
+
+<div class="teamBox">
+
+<img id="logo1">
+
+<div id="rating1" class="rating"></div>
+
+<select id="team1"></select>
+
+</div>
+
+<div class="teamBox">
+
+<img id="logo2">
+
+<div id="rating2" class="rating"></div>
+
+<select id="team2"></select>
+
+</div>
+
+</div>
+
+<button class="startBtn" onclick="startMatch()">Start Match</button>
+
+<div class="score" id="score">0 - 0</div>
+
+<div id="log"></div>
+
+</div>
+
+<script>
+
+/* ---------------- GLOBAL VARIABLES ---------------- */
+
+let teams={}
+
+let minute=0
+
+let score1=0
+
+let score2=0
+
+let matchInterval
+
+let running=false
+
+/* ---------------- LEAGUE TEAMS ---------------- */
+
+const leagueTeams={
+
+"La Liga":{
+
+"Real Madrid":{logo:"real_madrid.png",rating:89},
+
+"Barcelona":{logo:"barcelona.png",rating:87},
+
+"Atletico Madrid":{logo:"atm.png",rating:85},
+
+"Sevilla":{logo:"sevilla.png",rating:82},
+
+"Real Sociedad":{logo:"sociedad.png",rating:81},
+
+"Villarreal":{logo:"villarreal.png",rating:81},
+
+"Real Betis":{logo:"betis.png",rating:80},
+
+"Valencia":{logo:"valencia.png",rating:79}
+
+},
+
+"Premier League":{
+
+"Man City":{logo:"mancity.png",rating:90},
+
+"Man UTD":{logo:"manutd.png",rating:84},
+
+"Arsenal":{logo:"arsenal.png",rating:86},
+
+"Chelsea":{logo:"chelsea.png",rating:85},
+
+"Liverpool":{logo:"liverpool.png",rating:88},
+
+"Tottenham":{logo:"spurs.png",rating:83},
+
+"Newcastle":{logo:"newcastle.png",rating:82},
+
+"Aston Villa":{logo:"villa.png",rating:81}
+
+},
+
+"Ligue 1":{
+
+"PSG":{logo:"psg.png",rating:88},
+
+"Marseille":{logo:"marseille.png",rating:82},
+
+"Monaco":{logo:"monaco.png",rating:83},
+
+"Lyon":{logo:"lyon.png",rating:82},
+
+"Lille":{logo:"lille.png",rating:82},
+
+"Nice":{logo:"nice.png",rating:80}
+
+},
+
+"Serie A":{
+
+"AC Milan":{logo:"acmilan.png",rating:86},
+
+"Inter Milan":{logo:"inter.png",rating:87},
+
+"Juventus":{logo:"juve.png",rating:86},
+
+"Napoli":{logo:"napoli.png",rating:86},
+
+"Roma":{logo:"roma.png",rating:83},
+
+"Lazio":{logo:"lazio.png",rating:82}
+
+},
+
+"Scottish Premiership":{
+
+"Rangers":{logo:"rangers.png",rating:80},
+
+"Celtic":{logo:"celtic.png",rating:81},
+
+"Hearts":{logo:"hearts.png",rating:74},
+
+"Hibernian":{logo:"hibs.png",rating:73}
+
+}
+
+}
+
+/* ---------------- NATIONS ---------------- */
+
+const nationTeams={
+
+"Brazil":{logo:"brazil.png",rating:90},
+
+"Argentina":{logo:"argentina.png",rating:90},
+
+"France":{logo:"france.png",rating:88},
+
+"England":{logo:"england.png",rating:89},
+
+"Spain":{logo:"spain.png",rating:87},
+
+"Germany":{logo:"germany.png",rating:86},
+
+"Italy":{logo:"italy.png",rating:85},
+
+"Portugal":{logo:"portugal.png",rating:84}
+
+}
+
+/* ---------------- POPULATE CLUBS ---------------- */
+
+function populateTeams(){
+
+let s1=document.getElementById("team1")
+
+let s2=document.getElementById("team2")
+
+s1.innerHTML=""
+
+s2.innerHTML=""
+
+teams={}
+
+for(let league in leagueTeams){
+
+let g1=document.createElement("optgroup")
+
+g1.label=league
+
+let g2=document.createElement("optgroup")
+
+g2.label=league
+
+for(let team in leagueTeams[league]){
+
+teams[team]=leagueTeams[league][team]
+
+let o1=document.createElement("option")
+
+o1.value=team
+
+o1.innerText=team
+
+g1.appendChild(o1)
+
+let o2=document.createElement("option")
+
+o2.value=team
+
+o2.innerText=team
+
+g2.appendChild(o2)
+
+}
+
+s1.appendChild(g1)
+
+s2.appendChild(g2)
+
+}
+
+s1.selectedIndex=0
+
+s2.selectedIndex=1
+
+updateTeam(1)
+
+updateTeam(2)
+
+}
+
+/* ---------------- UPDATE TEAM ---------------- */
+
+function updateTeam(n){
+
+let name=document.getElementById("team"+n).value
+
+document.getElementById("logo"+n).src=teams[name].logo
+
+document.getElementById("rating"+n).innerText="Rating "+teams[name].rating
+
+}
+
+/* ---------------- ACTION LOG ---------------- */
+
+function log(text){
+
+let box=document.getElementById("log")
+
+box.innerHTML+=text+"<br>"
+
+box.scrollTop=box.scrollHeight
+
+}
+
+/* ---------------- MATCH SIMULATION ---------------- */
+
+function startMatch(){
+
+if(running)return
+
+running=true
+
+minute=0
+
+score1=0
+
+score2=0
+
+document.getElementById("log").innerHTML=""
+
+let t1=document.getElementById("team1").value
+
+let t2=document.getElementById("team2").value
+
+let r1=teams[t1].rating
+
+let r2=teams[t2].rating
+
+log("Kickoff! "+t1+" vs "+t2)
+
+matchInterval=setInterval(()=>{
+
+minute++
+
+let roll=Math.random()*100
+
+let diff=r1-r2
+
+let chance1=5+diff*0.25
+
+let chance2=5-diff*0.25
+
+if(roll<chance1*0.2){
+
+score1++
+
+log(minute+"' ⚽ GOAL "+t1)
+
+}
+
+else if(roll<chance1*0.2+chance2*0.2){
+
+score2++
+
+log(minute+"' ⚽ GOAL "+t2)
+
+}
+
+else if(roll<3){
+
+let t=Math.random()<0.5?t1:t2
+
+log(minute+"' Free Kick for "+t)
+
+}
+
+else if(roll<4){
+
+let t=Math.random()<0.5?t1:t2
+
+log(minute+"' Yellow Card "+t)
+
+}
+
+else if(roll<4.5){
+
+let t=Math.random()<0.5?t1:t2
+
+log(minute+"' Red Card "+t)
+
+}
+
+document.getElementById("score").innerText=score1+" - "+score2
+
+if(minute>=90){
+
+clearInterval(matchInterval)
+
+running=false
+
+log("FULL TIME")
+
+if(score1>score2){
+
+log("🏆 "+t1+" WINS")
+
+}
+
+else if(score2>score1){
+
+log("🏆 "+t2+" WINS")
+
+}
+
+else{
+
+log("MATCH ENDS IN A DRAW")
+
+}
+
+}
+
+},140)
+
+}
+
+/* ---------------- MODE SWITCH ---------------- */
+
+function setMode(mode){
+
+if(mode==="CLUBS"){
+
+populateTeams()
+
+}
+
+if(mode==="NATIONS"){
+
+populateNations()
+
+}
+
+if(mode==="CL"){
+
+document.body.style.background="#002c8f"
+
+populateTeams()
+
+}
+
+}
+
+/* ---------------- POPULATE NATIONS ---------------- */
+
+function populateNations(){
+
+let s1=document.getElementById("team1")
+
+let s2=document.getElementById("team2")
+
+s1.innerHTML=""
+
+s2.innerHTML=""
+
+teams=nationTeams
+
+for(let t in nationTeams){
+
+let o1=document.createElement("option")
+
+o1.value=t
+
+o1.innerText=t
+
+s1.appendChild(o1)
+
+let o2=document.createElement("option")
+
+o2.value=t
+
+o2.innerText=t
+
+s2.appendChild(o2)
+
+}
+
+updateTeam(1)
+
+updateTeam(2)
+
+}
+
+/* ---------------- INIT ---------------- */
+
+window.onload=()=>{
+
+populateTeams()
+
+document.getElementById("team1").onchange=()=>updateTeam(1)
+
+document.getElementById("team2").onchange=()=>updateTeam(2)
+
+}
+
+</script>
+
+</body>
+
+</html>
